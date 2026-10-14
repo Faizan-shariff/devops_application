@@ -1,0 +1,11 @@
+test_404 (test_server.HTTPTests.test_404) ... 127.0.0.1 - - [14/Oct/2026 13:27:51] "GET /missing HTTP/1.1" 404 -
+ok
+test_health (test_server.HTTPTests.test_health) ... 127.0.0.1 - - [14/Oct/2026 13:27:51] "GET /health HTTP/1.1" 200 -
+ok
+test_root (test_server.HTTPTests.test_root) ... 127.0.0.1 - - [14/Oct/2026 13:27:51] "GET / HTTP/1.1" 200 -
+ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.595s
+
+OK

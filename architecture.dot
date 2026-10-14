@@ -1,0 +1,25 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", pad="0.35", nodesep="0.5", ranksep="0.75", fontname="DejaVu Sans", label="Logikality | Asynchronous document processing", labelloc=t, fontsize=22];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", color="#4B5563", fillcolor="#F8FAFC", fontcolor="#111827", penwidth=1.3, margin="0.19,0.13"];
+  edge [fontname="DejaVu Sans", fontsize=10, color="#64748B", arrowsize=0.75];
+  user [label="Mortgage user / client", shape=oval, fillcolor="#EFF6FF"];
+  alb [label="Public ALB + TLS\n(production extension)", style="rounded,dashed,filled", fillcolor="#EFF6FF"];
+  api [label="API service\nECS Fargate (proposed)\nHTTP prototype implemented", style="rounded,dashed,filled", fillcolor="#E0F2FE"];
+  s3 [label="Private S3 bucket\nincoming/ · processed/\nTerraform implemented", fillcolor="#DCFCE7"];
+  sqs [label="SQS jobs queue\nTerraform implemented", fillcolor="#DCFCE7"];
+  worker [label="Worker service\nECS Fargate (proposed)", style="rounded,dashed,filled", fillcolor="#FEF3C7"];
+  dlq [label="SQS dead-letter queue\nTerraform implemented", fillcolor="#FEE2E2"];
+  rds [label="RDS PostgreSQL\n(proposed idempotency/state)", style="rounded,dashed,filled", fillcolor="#F3E8FF"];
+  api_role [label="API IAM task role\nTerraform implemented", fillcolor="#DCFCE7"];
+  worker_role [label="Worker IAM task role\nTerraform implemented", fillcolor="#DCFCE7"];
+  user -> alb [style=dashed]; alb -> api [style=dashed];
+  api -> s3 [label="upload incoming/*", style=dashed];
+  api -> sqs [label="send object reference", style=dashed];
+  sqs -> worker [label="receive / acknowledge", style=dashed];
+  worker -> s3 [label="read / write output", style=dashed];
+  sqs -> dlq [label="after 5 receives"];
+  worker -> rds [label="job state / dedupe", style=dashed];
+  api_role -> api [style=dotted, arrowhead=none, constraint=false];
+  worker_role -> worker [style=dotted, arrowhead=none, constraint=false];
+  legend [shape=note, label="Solid green resources: Terraform defined\nDashed paths/services: production extension\nIAM roles: defined, not attached to compute", fillcolor="#F1F5F9"];
+}

@@ -1,0 +1,43 @@
+PS D:\Projects\devops_application> docker ps
+CONTAINER ID   IMAGE                           COMMAND                  CREATED         STATUS                            PORTS                      NAMES
+0ba26b2e06be   logikality-document-api:local   "python -m app.server"   5 seconds ago   Up 5 seconds (health: starting)   127.0.0.1:8080->8080/tcp   logikality-api
+PS D:\Projects\devops_application> docker ps
+CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS                    PORTS                      NAMES
+0ba26b2e06be   logikality-document-api:local   "python -m app.server"   22 seconds ago   Up 22 seconds (healthy)   127.0.0.1:8080->8080/tcp   logikality-api
+PS D:\Projects\devops_application> docker ps
+CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS                    PORTS                      NAMES
+0ba26b2e06be   logikality-document-api:local   "python -m app.server"   25 seconds ago   Up 25 seconds (healthy)   127.0.0.1:8080->8080/tcp   logikality-api
+PS D:\Projects\devops_application> docker inspect logikality-api --format '{{.State.Health.Status}}'
+healthy
+PS D:\Projects\devops_application> docker exec logikality-api id
+uid=10001(appuser) gid=10001 groups=10001
+PS D:\Projects\devops_application> docker logs --tail 50 logikality-api
+127.0.0.1 - - [14/Oct/2026 08:40:41] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [14/Oct/2026 08:41:12] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [14/Oct/2026 08:41:42] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [14/Oct/2026 08:42:13] "GET /health HTTP/1.1" 200 -
+PS D:\Projects\devops_application> 
+
+
+-----------------------------------------------------------------------------------------------------------------
+
+Production improvements :
+
+docker run -d `
+  --name logikality-api `
+  --read-only `
+  --cap-drop ALL `
+  --security-opt no-new-privileges:true `
+  --pids-limit 100 `
+  --memory 256m `
+  --cpus 0.5 `
+  -p 127.0.0.1:8080:8080 `
+  logikality-document-api:v1
+
+
+These options introduce additional restrictions:
+- --read-only: Prevents writes to the container's root filesystem.
+- --cap-drop ALL: Removes Linux capabilities.
+- --security-opt no-new-privileges:true: Prevents privilege escalation through mechanisms such as setuid.
+- --pids-limit 100: Limits the number of processes.
+- --memory 256m and --cpus 0.5: Constrain resource consumption.

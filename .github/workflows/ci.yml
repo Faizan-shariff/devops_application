@@ -1,0 +1,45 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run application tests
+        run: python -m unittest discover -s app -p 'test_*.py' -v
+      - name: Set image tag from commit SHA
+        run: echo "IMAGE_TAG=sha-${GITHUB_SHA::12}" >> "$GITHUB_ENV"
+      - name: Build immutable candidate image
+        run: docker build --pull -t "logikality-document-api:${IMAGE_TAG}" .
+      - name: Smoke test container
+        run: |
+          docker run -d --name assessment-app -p 127.0.0.1:8080:8080 "logikality-document-api:${IMAGE_TAG}"
+          for i in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:8080/health; then exit 0; fi
+            sleep 1
+          done
+          docker logs assessment-app
+          exit 1
+      - name: Show container logs
+        if: always()
+        run: docker logs assessment-app 2>/dev/null || true
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform format
+        run: terraform -chdir=infra fmt -check -recursive
+      - name: Terraform init (no backend)
+        run: terraform -chdir=infra init -backend=false -input=false
+      - name: Terraform validate
+        run: terraform -chdir=infra validate

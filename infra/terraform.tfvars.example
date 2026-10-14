@@ -1,0 +1,4 @@
+aws_region    = ""
+project_name  = ""
+environment   = ""
+bucket_suffix = ""
